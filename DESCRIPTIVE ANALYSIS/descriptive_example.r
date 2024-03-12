@@ -259,6 +259,11 @@ ggplot(d0)+
 # In scatter plots we represent two variables simultaneously
 # Scatter plots can provide the first hint of a relation between variables
 plot(d0$Sepal.Length,d0$Petal.Length)
+ggplot(d0, aes(x = Sepal.Length, y = Petal.Length, color = Species)) +
+  geom_point() +  # Add points to represent data
+  labs(title = "Sepal Length vs. Petal Length (Iris)",
+       x = "Sepal Length (cm)", y = "Petal Length (cm)") +
+  scale_color_discrete(name = "Species")
 
 # in ggplot2
 ggplot(d0)+
