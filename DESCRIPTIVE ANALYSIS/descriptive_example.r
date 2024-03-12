@@ -299,3 +299,4 @@ plot(density(d0$Sepal.Length))
 ggplot(d0) +
   aes(x = Sepal.Length) +
   geom_density()
+

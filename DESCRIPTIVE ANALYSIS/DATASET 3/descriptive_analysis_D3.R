@@ -1,41 +1,92 @@
 #Check if the following packages are installed, if not install them
 pacman::p_load(
-  rio,          # File import
-  here,         # File locator
-  skimr,        # get overview of data
+  pastecs,      # for data summaries
   tidyverse,    # data management + ggplot2 graphics 
-  gtsummary,    # summary statistics and tests
-  rstatix,      # summary statistics and statistical tests
-  janitor,      # adding totals and percents to tables
-  scales,       # easily convert proportions to percents  
   flextable,    # converting tables to pretty images
-  corrplot      # study correlation
+  corrplot,     # study correlation
+  tidyr         # Reshape dataframes, helpful to plot them
 )
 
 #Reading the third dataset
 d3 <- read.csv("DESCRIPTIVE ANALYSIS/DATASET 3/diabetes_d3.csv")
 
-#An overview of the data frame and a summary of every column
-dfSummary <- as.data.frame(skim(d3))
+#discretize Outcome variable
+d3$Outcome <- ifelse(d3$Outcome == 0,"No diabetes","Diabetes")
 
-#Changing the name of the columns to make the more Readable
-colnames(dfSummary) <- c("Type", "Variable", "Missing Rows", "Completion Rate",
-                         "mean", "sd", "min", "Q1", "Q2", "Q3", "max", "hist")
+#Outcome as a factor
+d3$Outcome <- as.factor(d3$Outcome)
 
-#Delete some columns to make de visualization prettier and mor significant
-dfSummary <- dfSummary %>% select(-c("Type","Missing Rows", "Completion Rate"))
+# Creating an extend summary of the data frame
+dfSummary = d3 %>% select_if(is.numeric) %>% stat.desc(norm=TRUE)
 
-#Round numeric columns to 4 decimal numbers
-dfSummary <- dfSummary %>% mutate(across(where(is.numeric), round, digits = 4))
+# Deletion of some irrelevant rows
+dfSummary <- dfSummary[-c(7,10,11,16,18),]
 
-#Converting dfSummary to a flextable to make it prettier
+#Round numeric columns to 2 decimal numbers
+dfSummary <- dfSummary %>% mutate(across(where(is.numeric), round, digits = 2))
+
+#adding a column with the row names. Necessary for the flextable
+statRow <- data.frame("Stat"=rownames(dfSummary))
+dfSummary <- cbind(statRow,dfSummary)
+
+# Get the quartiles and IQR for each column (excluding the summary rows)
+quartiles <- cbind("Stat" = c("Q2","Q3","IQR"),apply(d3[,1:8], 2, function(x) {
+  q <- quantile(x, na.rm = TRUE)
+  c(Q2 = q[2], Q3 = q[3], IQR = q[3] - q[1])
+}))
+
+# Add the quartiles and IQR as new rows to the dataframe
+dfSummary <- rbind(dfSummary, quartiles)
+
+#Deletion of rownames because they are already in the first column
+rownames(dfSummary) <- NULL
+
+#Convert data frame to a flextable for a pretty representation
 ftSummary <- flextable(dfSummary)
 
+
 #Saving flextable as a docx in order to copy and paste the table in the report
-save_as_docx(  "Summary" =ftSummary,path = "DESCRIPTIVE ANALYSIS/DATASET 3/summary_d3.docx")
+save_as_docx(ftSummary,path = "DESCRIPTIVE ANALYSIS/DATASET 3/summary_d3.docx")
+
+# Reshape d3 to long format in order to plot it
+data_long <- gather(d3[,c("BloodPressure","BMI","Glucose","Insulin")], key = "Measurement", value = "Value")
+
+# Create boxplot using ggplot2
+ggplot(data_long, aes(x = Measurement, y = Value, fill=Measurement)) +
+  geom_boxplot() +
+  scale_fill_viridis(discrete = TRUE) +
+  geom_jitter(color="#636363", size=0.7, alpha=0.5) +
+  theme_ipsum() +
+  theme(
+    legend.position="none",
+    plot.title = element_text(size=11)
+  ) +
+  ggtitle("Boxplots of BloodPressure, BMI, Glucose and Insulin") +
+  xlab("")
+
+# Define a function to plot histogram and density for each numeric variable and save plots
+plot_and_save_hist_density <- function(data, folder) {
+  # Select numeric columns
+  data_numeric <- data %>% select_if(is.numeric)
+  
+  # Loop through each numeric column
+  for (col in names(data_numeric)) {
+    # Create histogram with density
+    hist(data_numeric[[col]], freq = FALSE, main = paste("Density function of", col))
+    dx <- density(data_numeric[[col]])
+    lines(dx, lwd = 2, col = "red")
+    
+    # Save the plot with column name as filename
+    dev.copy(png, filename = paste0(folder, "/", col, ".png"))
+    dev.off()
+  }
+}
+
+plot_and_save_hist_density(d3, "DESCRIPTIVE ANALYSIS/DATASET 3/density_functions")
 
 #Study of the correlation coefficients between variables
 cor <- cor(d3 %>% select_if(is.numeric))
 
 #Plotting the results of the correlation analysis
 corrplot(cor, method = "color", tl.cex = 0.7, tl.col = "black")
+
