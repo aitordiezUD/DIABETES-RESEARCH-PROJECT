@@ -10,7 +10,8 @@ pacman::p_load(
   scales,       # easily convert proportions to percents  
   flextable,    # converting tables to pretty images
   corrplot,      # study correlation
-  vcd
+  vcd,
+  kableExtra
 )
 
 # Reading the first dataset
@@ -70,8 +71,16 @@ save_as_docx(  "Summary" =ftModes,path = "DESCRIPTIVE ANALYSIS/DATASET 1/summary
 
 
 # Compute the proportion of each of the variables
-
 props <- sapply(dBinary, function(x) prop.table(table(x)))
+
+#Creating a pretty visualization of most relevant proportions
+props <- props[,c(1,2,4,14,8,9)]
+
+rownames(props) <- NULL
+
+round(props,3) %>%
+  kable("html") %>%
+  kable_styling(full_width = F)
 
 # Compute the chi-square test to see the relation between two variables
 # Create the contingency tables.

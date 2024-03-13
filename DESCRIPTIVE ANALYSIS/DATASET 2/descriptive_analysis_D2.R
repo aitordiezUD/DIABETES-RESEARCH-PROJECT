@@ -19,9 +19,6 @@ d2 <- d2[, c("age", "race", "gender", "time_in_hospital",
 #Convert all variables to factors
 d2 <- d2 %>% mutate_at(c(1,2,3,6,7),as.factor)
 
-#table
-mosaicplot(table(d2_$A1Cresult,d2_$diabetesMed))
-
 #Plotting the age distribution
 ggplot(d2, aes(x = age)) +
   geom_bar(stat = "count", fill = "steelblue") +  # Count occurrences of each species
@@ -43,9 +40,26 @@ ggplot(d2[d2$A1Cresult!="None",], aes(x = A1Cresult)) +
   labs(title = "Distribution of A1C Results", x = "A1C (%)", y = "Number of Patients")
 
 #Plot the relation between the age and if they have been medicated
-ggplot(datos, aes(x = age, fill = diabetesMed)) +
+ggplot(d2, aes(x = age, fill = diabetesMed)) +
   geom_bar(position = "dodge", stat = "count") +
   labs(title = "Relationship between Age Range and Medication Status",
        x = "Age",
        y = "Patient count") +
   theme_minimal()
+
+#Plot the relation between the age and A1C result
+ggplot(d2[d2$A1Cresult != "None",], aes(x = age, fill = A1Cresult)) +
+  geom_bar(position = "dodge", stat = "count") +
+  labs(title = "Relationship between Age Range and A1C Results",
+       x = "Age",
+       y = "A1C Results") +
+  theme_minimal()
+
+#Grouping the number of lab procedures
+d2$group_procedures <- ifelse(d2$num_lab_procedures < 31,"<31",
+                              ifelse(d2$num_lab_procedures < 44,"31-44",
+                                     ifelse(d2$num_lab_procedures < 57,"44-57","57-132")))
+d2$group_procedures <- as.factor(d2$group_procedures)
+
+#Prop table between A1C result and group of procedures
+round(prop.table(table(d2[d2$A1Cresult!="None","A1Cresult"],d2[d2$A1Cresult!="None","group_procedures"])),3)

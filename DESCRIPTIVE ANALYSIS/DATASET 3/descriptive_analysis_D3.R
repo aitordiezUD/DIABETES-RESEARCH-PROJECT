@@ -4,6 +4,8 @@ pacman::p_load(
   tidyverse,    # data management + ggplot2 graphics 
   flextable,    # converting tables to pretty images
   corrplot,     # study correlation
+  viridis,
+  hrbrthemes,
   tidyr         # Reshape dataframes, helpful to plot them
 )
 
@@ -30,9 +32,12 @@ statRow <- data.frame("Stat"=rownames(dfSummary))
 dfSummary <- cbind(statRow,dfSummary)
 
 # Get the quartiles and IQR for each column (excluding the summary rows)
-quartiles <- cbind("Stat" = c("Q2","Q3","IQR"),apply(d3[,1:8], 2, function(x) {
-  q <- quantile(x, na.rm = TRUE)
-  c(Q2 = q[2], Q3 = q[3], IQR = q[3] - q[1])
+quartiles <- cbind("Stat" = c("Q1","Q2","Q3","IQR"),apply(d3[,1:8], 2, function(x) {
+  q1 <- quantile(x,0.25)
+  q2 <- quantile(x,0.5)
+  q3 <- quantile(x,0.75)
+  iqr <- IQR(x)
+  c(Q1 = q1, Q2 = q2, Q3=q3 , IQR = iqr)
 }))
 
 # Add the quartiles and IQR as new rows to the dataframe
