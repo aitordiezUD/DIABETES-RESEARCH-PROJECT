@@ -41,3 +41,11 @@ round(prop.table(table(d2$race, d2$gender)),3) %>%
 ggplot(d2[d2$A1Cresult!="None",], aes(x = A1Cresult)) + 
   geom_histogram(stat="count", fill = "steelblue") + 
   labs(title = "Distribution of A1C Results", x = "A1C (%)", y = "Number of Patients")
+
+#Plot the relation between the age and if they have been medicated
+ggplot(datos, aes(x = age, fill = diabetesMed)) +
+  geom_bar(position = "dodge", stat = "count") +
+  labs(title = "Relationship between Age Range and Medication Status",
+       x = "Age",
+       y = "Patient count") +
+  theme_minimal()
