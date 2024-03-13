@@ -63,3 +63,13 @@ d2$group_procedures <- as.factor(d2$group_procedures)
 
 #Prop table between A1C result and group of procedures
 round(prop.table(table(d2[d2$A1Cresult!="None","A1Cresult"],d2[d2$A1Cresult!="None","group_procedures"])),3)
+#Median of time spent by age
+average_time <- aggregate(TimeSpent ~ AgeRange, diabetes_data, mean)
+
+#Plot of the median of time spent by age
+ggplot(average_time, aes(x = age, y = time_in_hospital, fill = age)) +
+  geom_col() +
+  labs(title = "Time spent in hospital by age",
+       x = "Age",
+       y = "Average time spent") +
+  theme_minimal()
