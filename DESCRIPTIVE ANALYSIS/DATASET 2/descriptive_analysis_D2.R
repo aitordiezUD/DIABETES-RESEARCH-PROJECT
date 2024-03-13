@@ -6,7 +6,8 @@ pacman::p_load(
   corrplot,     # study correlation
   tidyr,         # Reshape dataframes, helpful to plot them
   skimr,
-  kableExtra
+  kableExtra,
+  summarytools
 )
 
 #Reading the second dataset
@@ -22,12 +23,14 @@ d2 <- d2 %>% mutate_at(c(1,2,3,6,7),as.factor)
 #Plotting the age distribution
 ggplot(d2, aes(x = age)) +
   geom_bar(stat = "count", fill = "steelblue") +  # Count occurrences of each species
-  labs(title = "Distribution of patients' age", x = "Age", y = "Count")
+  labs(title = "Distribution of patients' age", x = "Age", y = "Count") +
+  theme_minimal()
 
 #Plotting distribution of Hospital Stay Length
 ggplot(d2, aes(x = time_in_hospital)) + 
    geom_histogram(stat="count",fill = "steelblue") + 
-   labs(title = "Distribution of Hospital Stay Length", x = "Days in Hospital", y = "Number of Patients")
+   labs(title = "Distribution of Hospital Stay Length", x = "Days in Hospital", y = "Number of Patients") +
+  theme_minimal()
 
 #Prop table between Race and Gender
 round(prop.table(table(d2$race, d2$gender)),3) %>%
@@ -37,7 +40,8 @@ round(prop.table(table(d2$race, d2$gender)),3) %>%
 #Plotting A1C Results
 ggplot(d2[d2$A1Cresult!="None",], aes(x = A1Cresult)) + 
   geom_histogram(stat="count", fill = "steelblue") + 
-  labs(title = "Distribution of A1C Results", x = "A1C (%)", y = "Number of Patients")
+  labs(title = "Distribution of A1C Results", x = "A1C (%)", y = "Number of Patients") +
+  theme_minimal()
 
 #Plot the relation between the age and if they have been medicated
 ggplot(d2, aes(x = age, fill = diabetesMed)) +
@@ -64,11 +68,11 @@ d2$group_procedures <- as.factor(d2$group_procedures)
 #Prop table between A1C result and group of procedures
 round(prop.table(table(d2[d2$A1Cresult!="None","A1Cresult"],d2[d2$A1Cresult!="None","group_procedures"])),3)
 #Median of time spent by age
-average_time <- aggregate(TimeSpent ~ AgeRange, diabetes_data, mean)
+average_time <- aggregate(time_in_hospital ~ age, d2, mean)
 
 #Plot of the median of time spent by age
-ggplot(average_time, aes(x = age, y = time_in_hospital, fill = age)) +
-  geom_col() +
+ggplot(average_time, aes(x = age, y = time_in_hospital)) +
+  geom_col(fill = "steelblue") +
   labs(title = "Time spent in hospital by age",
        x = "Age",
        y = "Average time spent") +
