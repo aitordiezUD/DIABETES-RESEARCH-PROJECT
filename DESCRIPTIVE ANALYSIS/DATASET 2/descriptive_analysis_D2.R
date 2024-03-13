@@ -7,7 +7,7 @@ pacman::p_load(
   tidyr,         # Reshape dataframes, helpful to plot them
   skimr,
   kableExtra,
-  summarytools
+  DescTools     # calculation of the mode
 )
 
 #Reading the second dataset
@@ -20,6 +20,25 @@ d2 <- d2[, c("age", "race", "gender", "time_in_hospital",
 #Convert all variables to factors
 d2 <- d2 %>% mutate_at(c(1,2,3,6,7),as.factor)
 
+#Selection of categorical variables
+factor_vars <- d2 %>% select_if(is.factor)
+
+#Creation of the summary
+summaryDf_factors<- skim(factor_vars)
+
+#Function to calculate the mode and adding it to the summary
+summaryDf_factors <- cbind(summaryDf_factors,"Mode" = apply(d2 %>% select_if(is.factor), 2, function(x) {
+  c(Mode = Mode(x))
+}))
+
+#Deletion of some columns that aren't relevant
+summaryDf_factors <- summaryDf_factors[,-c(3,4,5)]
+
+#Parsing the dataFrame to a flextable in order to make it prettier
+ftSummary_factors <- flextable(summaryDf_factors)
+
+#Saving the table in a docx in order to copy and paste in the report
+save_as_docx(ftSummary_factors, path = "DESCRIPTIVE ANALYSIS/DATASET 2/summary_d2.docx")
 #Plotting the age distribution
 ggplot(d2, aes(x = age)) +
   geom_bar(stat = "count", fill = "steelblue") +  # Count occurrences of each species

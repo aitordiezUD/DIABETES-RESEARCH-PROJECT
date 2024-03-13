@@ -18,18 +18,35 @@ d3$Outcome <- ifelse(d3$Outcome == 0,"No diabetes","Diabetes")
 #Outcome as a factor
 d3$Outcome <- as.factor(d3$Outcome)
 
-# Creating an extend summary of the data frame
-dfSummary = d3 %>% select_if(is.numeric) %>% stat.desc(norm=TRUE)
+#Selection of categorical variables
+factor_vars <- d3 %>% select_if(is.factor)
+
+#Creation of the summary
+summaryDf_factors<- skim(factor_vars)
+
+#Function to calculate the mode and adding it to the summary
+summaryDf_factors <- cbind(summaryDf_factors,"Mode" = apply(d3 %>% select_if(is.factor), 2, function(x) {
+  c(Mode = Mode(x))
+}))
+
+#Deletion of some columns that aren't relevant
+summaryDf_factors <- summaryDf_factors[,-c(3,4,5)]
+
+#Parsing the dataFrame to a flextable in order to make it prettier
+ftSummary_factors <- flextable(summaryDf_factors)
+
+# Creating an extend summary of the numeric values of the data frame
+dfSummary_num = d3 %>% select_if(is.numeric) %>% stat.desc(norm=TRUE)
 
 # Deletion of some irrelevant rows
-dfSummary <- dfSummary[-c(7,10,11,16,18),]
+dfSummary_num <- dfSummary_num[-c(7,10,11,16,18),]
 
 #Round numeric columns to 2 decimal numbers
-dfSummary <- dfSummary %>% mutate(across(where(is.numeric), round, digits = 2))
+dfSummary_num <- dfSummary_num %>% mutate(across(where(is.numeric), round, digits = 2))
 
 #adding a column with the row names. Necessary for the flextable
-statRow <- data.frame("Stat"=rownames(dfSummary))
-dfSummary <- cbind(statRow,dfSummary)
+statRow <- data.frame("Stat"=rownames(dfSummary_num))
+dfSummary_num <- cbind(statRow,dfSummary_num)
 
 # Get the quartiles and IQR for each column (excluding the summary rows)
 quartiles <- cbind("Stat" = c("Q1","Q2","Q3","IQR"),apply(d3[,1:8], 2, function(x) {
@@ -41,17 +58,16 @@ quartiles <- cbind("Stat" = c("Q1","Q2","Q3","IQR"),apply(d3[,1:8], 2, function(
 }))
 
 # Add the quartiles and IQR as new rows to the dataframe
-dfSummary <- rbind(dfSummary, quartiles)
+dfSummary_num <- rbind(dfSummary_num, quartiles)
 
 #Deletion of rownames because they are already in the first column
-rownames(dfSummary) <- NULL
+rownames(dfSummary_num) <- NULL
 
 #Convert data frame to a flextable for a pretty representation
-ftSummary <- flextable(dfSummary)
-
+ftSummary_num <- flextable(dfSummary_num)
 
 #Saving flextable as a docx in order to copy and paste the table in the report
-save_as_docx(ftSummary,path = "DESCRIPTIVE ANALYSIS/DATASET 3/summary_d3.docx")
+save_as_docx("Numerical" = ftSummary_num, "Categorical" = ftSummary_factors,path = "DESCRIPTIVE ANALYSIS/DATASET 3/summary_d3.docx")
 
 # Reshape d3 to long format in order to plot it
 data_long <- gather(d3[,c("BloodPressure","BMI","Glucose","Insulin")], key = "Measurement", value = "Value")
