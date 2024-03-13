@@ -49,3 +49,14 @@ ggplot(datos, aes(x = age, fill = diabetesMed)) +
        x = "Age",
        y = "Patient count") +
   theme_minimal()
+
+#Median of time spent by age
+average_time <- aggregate(TimeSpent ~ AgeRange, diabetes_data, mean)
+
+#Plot of the median of time spent by age
+ggplot(average_time, aes(x = age, y = time_in_hospital, fill = age)) +
+  geom_col() +
+  labs(title = "Time spent in hospital by age",
+       x = "Age",
+       y = "Average time spent") +
+  theme_minimal()
