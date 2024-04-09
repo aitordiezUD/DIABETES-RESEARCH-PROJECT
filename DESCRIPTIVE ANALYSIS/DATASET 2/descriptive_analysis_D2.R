@@ -2,12 +2,14 @@
 pacman::p_load(
   pastecs,      # for data summaries
   tidyverse,    # data management + ggplot2 graphics 
-  flextable,    # converting tables to pretty images
+  flextable,    # for pretty tables
   corrplot,     # study correlation
-  tidyr,         # Reshape dataframes, helpful to plot them
-  skimr,
-  kableExtra,
-  DescTools     # calculation of the mode
+  tidyr,        # Reshape dataframes, helpful to plot them
+  skimr,        # summary statistics
+  kableExtra,   # for pretty tables
+  DescTools,    # calculation of the mode
+  viridis,      # color palettes
+  hrbrthemes    # ggplot2 themes
 )
 
 #Reading the second dataset
@@ -37,8 +39,40 @@ summaryDf_factors <- summaryDf_factors[,-c(3,4,5)]
 #Parsing the dataFrame to a flextable in order to make it prettier
 ftSummary_factors <- flextable(summaryDf_factors)
 
-#Saving the table in a docx in order to copy and paste in the report
-save_as_docx(ftSummary_factors, path = "DESCRIPTIVE ANALYSIS/DATASET 2/summary_d2.docx")
+#Summary of numerical values
+dfSummary_num = d2 %>% select_if(is.numeric) %>% stat.desc()
+
+# Deletion of some irrelevant rows
+dfSummary_num <- dfSummary_num[-c(7,10,11,16,18),]
+
+#Round numeric columns to 2 decimal numbers
+dfSummary_num <- dfSummary_num %>% mutate(across(where(is.numeric), round, digits = 2))
+
+#adding a column with the row names. Necessary for the flextable
+statRow <- data.frame("Stat"=rownames(dfSummary_num))
+dfSummary_num <- cbind(statRow,dfSummary_num)
+
+# Get the quartiles and IQR for each column (excluding the summary rows)
+quartiles <- cbind("Stat" = c("Q1","Q2","Q3","IQR"),apply(d2[,c(4,5)], 2, function(x) {
+  q1 <- quantile(x,0.25)
+  q2 <- quantile(x,0.5)
+  q3 <- quantile(x,0.75)
+  iqr <- IQR(x)
+  c(Q1 = q1, Q2 = q2, Q3=q3 , IQR = iqr)
+}))
+
+# Add the quartiles and IQR as new rows to the dataframe
+dfSummary_num <- rbind(dfSummary_num, quartiles)
+
+#Deletion of rownames because they are already in the first column
+rownames(dfSummary_num) <- NULL
+
+#Convert data frame to a flextable for a pretty representation
+ftSummary_num <- flextable(dfSummary_num)
+
+#Saving flextable as a docx in order to copy and paste the table in the report
+save_as_docx("Numerical" = ftSummary_num, "Categorical" = ftSummary_factors,path = "DESCRIPTIVE ANALYSIS/DATASET 2/summary_d2.docx")
+
 #Plotting the age distribution
 ggplot(d2, aes(x = age)) +
   geom_bar(stat = "count", fill = "steelblue") +  # Count occurrences of each species
