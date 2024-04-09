@@ -12,6 +12,8 @@ pacman::p_load(
 #Reading the third dataset
 d3 <- read.csv("DESCRIPTIVE ANALYSIS/DATASET 3/diabetes_d3.csv")
 
+head(d3)
+
 #discretize Outcome variable
 d3$Outcome <- ifelse(d3$Outcome == 0,"No diabetes","Diabetes")
 

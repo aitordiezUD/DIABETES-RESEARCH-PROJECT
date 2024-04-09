@@ -17,6 +17,8 @@ pacman::p_load(
 # Reading the first dataset
 d1 <- read.csv("DESCRIPTIVE ANALYSIS/DATASET 1/diabetes_d1.csv")
 
+head(d1)
+
 # Creating a data frame with only the binary variables of the dataset
 dBinary <- d1%>% select(-c(Diabetes_012,BMI, MentHlth, PhysHlth, GenHlth,
 Age, Education, Income))
@@ -76,7 +78,7 @@ props <- sapply(dBinary, function(x) prop.table(table(x)))
 #Creating a pretty visualization of most relevant proportions
 props <- props[,c(1,2,4,14,8,9)]
 
-rownames(props) <- NULL
+rownames(props) <- c("0", "1")
 
 round(props,3) %>%
   kable("html") %>%
