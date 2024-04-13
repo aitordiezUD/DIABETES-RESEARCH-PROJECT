@@ -1,11 +1,7 @@
 # Check if the following packages are installed, if not install them
 pacman::p_load(
-  tidyverse,    # data management + ggplot2 graphics 
-  corrplot,     # study correlation
-  tidyr,        # Reshape dataframes, helpful to plot them
-  skimr,
-  DescTools,    # calculation of the mode
-  faraway
+  tidyverse   # data management + ggplot2 graphics 
+
 )
 
 # Clear the workspace
@@ -310,7 +306,3 @@ c(summary(mod21)$adj.r.squared,
 
 # Model 28 has the best score in BIC and the Second best in AIC and in R squared
 # So we can say the model selection is accurate
-
-
-
-
