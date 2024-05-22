@@ -109,84 +109,46 @@ fviz_pca_biplot(pca3, label="var",col.var = "black", repel=TRUE, habillage=d3$Ou
   scale_color_brewer(palette="Set1") +
   theme_minimal()
 
-######################################################################
-#Correspondence Analysis
+#####################################################################
+#K-Means Clustering
+# K-means #   
+q <- 3
+km.out <- kmeans(pca3$ind$coord[,1:2], q, nstart = 20)
+fviz_cluster(km.out, data = pca3$ind$coord[,1:2])
+fviz_cluster(km.out, data = pca3$ind$coord[,1:2], geom = "point", ellipse = TRUE, ellipse.type = "convex",
+             ellipse.level = 0.95, main = paste("K-Means Clustering Results with K = ", q, sep = " ")) +
+  theme_minimal()
 
-d1 <- read.csv("DESCRIPTIVE ANALYSIS/DATASET 1/diabetes_d1.csv")
-
-#Create both contingency and probability tables
-#Firstly, the contingency table
-ctable <- table(d1$Diabetes_012, d1$Income)
-rownames(ctable) <- c("None", "Prediabetes", "Diabetes")
-#Note: the exact values of categories 2,3,4,6,7 in Income variable aren't specified in the dataset home page
-colnames(ctable) <- c("<10.000$", "2", "3", "4", "<35.000$", "6", "7", ">75.000$")
-#Nice visualization of the contingency table
-ctable %>%
-  kbl(caption = "Contingency Table") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
+q <- 2
+km.out2 <- kmeans(pca3$ind$coord[,1:2], q, nstart = 20)
+fviz_cluster(km.out2, data = pca3$ind$coord[,1:2])
+fviz_cluster(km.out2, data = pca3$ind$coord[,1:2], geom = "point", ellipse = TRUE, ellipse.type = "convex",
+             ellipse.level = 0.95, main = paste("K-Means Clustering Results with K = ", q, sep = " ")) +
+  theme_minimal()
 
 
-#Balloon plot for a nice visualization of the contingency table
-balloonplot(ctable, main ="", xlab ="", ylab="",
-            label = FALSE, show.margins = FALSE)
+##################################################################
+#Hierarchical Clustering
+# Hierarchical clustering #
+#We first have to compute   a Distance Matrix, where we can choose among different metrics, e.g., euclidean/manhattan:
+distance_matrix <- dist(pca3$ind$coord[,1:2], method = "euclidean")
+distance_matrix
+#Then, we apply the hclust function choosing the method (e.g., complete/single)
+hc <-  hclust(distance_matrix, method = "complete")
+hc
+#We can plot the dendrogram
+plot(hc)
+#Two clusters:
+fviz_dend(hc, k = 3, rect = TRUE, cex = 0.5, show_labels = FALSE, k_colors = c("#470500", "#c4d417", "#1fa4cc"))
+#Three clusters:
+fviz_dend(hc, k = 2, rect = TRUE, cex = 0.5, show_labels = FALSE, k_colors = c("#470500", "#1fa4cc"))
+#To determine the cluster levels for each observation associated with a given cut of the dendrogram, we can use the \texttt{cutree()} function :
+cutree(hc, 3)
 
-#Secondly, we create the probability table
-prob_table <- prop.table(ctable)
-#Round the table to 2 decimals
-prob_table <- round(prob_table, 3)
-#Nice visualization of the probability table
-prob_table %>%
-  kbl(caption = "Probability Table") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
 
-#Adding the "Sum" row and columns to the tables
-#Only used this for visualization
-prob_table_wmargins <- addmargins(prob_table, 1:2)
-prob_table_wmargins <- round(prob_table_wmargins, 3)
-#Nice visualization of the probability table with margins
-prob_table_wmargins %>%
-  kbl(caption = "Probability Table") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
 
-#Chi-square test and Independent Model
-#From Chi-square test we can extract the Independent Model
-xtest <- chisq.test(ctable)
-total_observations <- ctable_wmargins["Sum", "Sum"]
-independent_model = xtest$expected
-independent_model <- round(independent_model, 2)
-independent_model %>%
-  kbl(caption = "Independence Table") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
 
-#We compare the results
-comp_it_ct = ctable-independent_model
-comp_it_ct <- round(comp_it_ct, 2)
-comp_it_ct  %>%
-  kbl(caption = "Real Values - Expected Values") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
 
-#Compute the correspondence analysis
-ca.res <- CA(ctable)
-summary(ca.res)
 
-#Percentage of variance by each component
-ca.res$eig
 
-#Screeplot to determine the percentage of explained variance
-fviz_screeplot(ca.res, addlabels = TRUE) +
-  geom_hline(yintercept=100/2, linetype=2, color="red")
-
-#Biplot to represent similarity
-fviz_ca_biplot(ca.res, repel = TRUE)
-
-#Correlation plots
-corrplot(ca.res$row$coord,is.corr=FALSE)
-corrplot(ca.res$col$coord,is.corr=FALSE)
-
-#Projection of categories
-fviz_ca(ca.res)
-
-#Plotting the cos2 value
-fviz_cos2(ca.res, choice = "col", axes = 1:2, fill = "lightblue", color = "orange")
-fviz_cos2(ca.res, choice = "row", axes = 1:2, fill = "lightblue", color = "orange")
 
